@@ -2,6 +2,8 @@
 
 define gitosis::repostorage(
     $basedir = 'absent',
+    $uid = 'absent',
+    $gid = 'uid',
     $initial_admin_pubkey
 ){
     include gitosis
@@ -13,6 +15,8 @@ define gitosis::repostorage(
 
     user::managed{"$name":
         homedir => $real_basedir,
+        uid => $uid,
+        gid => $gid,
     }
 
     file{"${real_basedir}/initial_admin_pubkey.puppet":
