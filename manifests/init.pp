@@ -2,6 +2,8 @@
 # Copyright (C) 2007 admin@immerda.ch
 # GPLv3
 
+import 'defines.pp'
+
 class gitosis {
     case $operatingsystem {
         default: { include gitosis::base }
