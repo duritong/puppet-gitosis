@@ -16,7 +16,7 @@ define gitosis::repostorage(
     }
 
     file{"${real_basedir}/initial_admin_pubkey.puppet":
-        content => $initial_admin_pubkey,
+        content => "${initial_admin_pubkey}\n",
         require => User[$name],
         owner => $name, group => $name, mode => 0600;
     }
