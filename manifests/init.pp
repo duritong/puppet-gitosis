@@ -12,7 +12,7 @@ class gitosis {
 
 class gitosis::base {
     include git
-    include rsync
+    include rsync::client
     include python::setuptools
     package{'gitosis':
         ensure => installed,
