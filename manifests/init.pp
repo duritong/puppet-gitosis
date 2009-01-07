@@ -16,7 +16,7 @@ class gitosis::base {
     include python::setuptools
     package{'gitosis':
         ensure => installed,
-        require => [ Package['git'], Package['rsync'], Package['python::setuptools'] ],
+        require => [ Package['git'], Package['rsync'], Package['python-setuptools'] ],
     }
 }
 
