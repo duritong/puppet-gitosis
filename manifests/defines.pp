@@ -68,7 +68,7 @@ define gitosis::repostorage(
         }
         exec{'add_ gitosisd_to_repos_group':
             command => "usermod -a -G ${name} gitosisd",
-            unless => "su gitosisd -c groups | grep -q ${name}",
+            unless => "groups gitosisd | grep -q ' ${name}'",
             require => User['gitosisd'],
             notify =>  Service['git-daemon'],
         }
