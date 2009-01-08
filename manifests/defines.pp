@@ -64,9 +64,6 @@ define gitosis::repostorage(
                 file{"/srv/git/${daemon_vhost}":
                     ensure => "${real_basedir}/repositories",
                 }
-                Line['gitvhosts_no']{
-                    ensure => absent,
-                }
             }
         }
         exec{'add_ gitosisd_to_repos_group':
