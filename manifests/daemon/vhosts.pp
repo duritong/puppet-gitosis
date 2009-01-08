@@ -1,10 +1,10 @@
 class gitosis::daemon::vhosts inherits gitosis::daemon {
     include git::daemon::vhosts
 
-    Line['gitosis_vhosts_no']{
+    Line['git-daemon_vhosts_yes']{
         ensure => absent,
     }
-    Line['gitosis_vhosts_yes']{
+    Line['git-daemon_vhosts_yes']{
         ensure => present,
     }
 }

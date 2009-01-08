@@ -10,13 +10,13 @@ class gitosis::daemon {
             default => '/sbin/nologin'
         },
    }
-   line{'gitosis_vhosts_no':
+   line{'git-daemon_vhosts_no':
         line => 'GITVHOSTS=no',
         file => '/etc/sysconfig/git-daemon',
         require => File['/etc/sysconfig/git-daemon'],
         notify => Service['git-daemon'],
    }
-   line{'gitosis_vhosts_yes':
+   line{'git-daemon_vhosts_yes':
         line => 'GITVHOSTS=yes',
         file => '/etc/sysconfig/git-daemon',
         ensure => absent,
