@@ -8,6 +8,7 @@ define gitosis::repostorage(
     $uid = 'absent',
     $gid = 'uid',
     $initial_admin_pubkey,
+    $sitename = 'absent',
     $git_vhost = 'absent',
     $gitweb = true
 ){
@@ -82,6 +83,7 @@ define gitosis::repostorage(
                 git::web::repo{$git_vhost:
                     projectroot => "${real_basedir}/repositories",
                     projects_list => "${real_basedir}/gitosis/projects.list",
+                    sitename => sitename,
                 }
                 case $gitweb_webserver {
                     'lighttpd': { 
