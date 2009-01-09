@@ -53,8 +53,6 @@ define gitosis::repostorage(
                 file{'/srv/git':
                     ensure => "${real_basedir}/repositories",
                 }     
-                Line['gitvhosts_yes']{
-                }
             }
             default: {
                 include gitosis::daemon::vhosts
