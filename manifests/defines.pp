@@ -8,7 +8,8 @@ define gitosis::repostorage(
     $uid = 'absent',
     $gid = 'uid',
     $initial_admin_pubkey,
-    $daemon_vhost = 'absent'
+    $git_vhost = 'absent',
+    $gitweb = true
 ){
     include gitosis
 
@@ -46,7 +47,7 @@ define gitosis::repostorage(
     }
     if $gitosis_daemon {
         include gitosis::daemon
-        case $daemon_vhost {
+        case $git_vhost {
             'absent': {
                 file{'/srv/git':
                     ensure => "${real_basedir}/repositories",
@@ -61,16 +62,39 @@ define gitosis::repostorage(
                     require => User['gitosisd'],
                     owner => root, group => gitosisd, mode => 0750; 
                 }
-                file{"/srv/git/${daemon_vhost}":
+                file{"/srv/git/${git_vhost}":
                     ensure => "${real_basedir}/repositories",
                 }
             }
         }
-        exec{'add_ gitosisd_to_repos_group':
+        exec{'add_gitosisd_to_repos_group':
             command => "usermod -a -G ${name} gitosisd",
             unless => "groups gitosisd | grep -q ' ${name}'",
             require => User['gitosisd'],
             notify =>  Service['git-daemon'],
+        }
+    }
+
+    if $gitweb {
+        case $git_vhost {
+            'absent': { fail("can't do gitweb if \$git_vhost isn't set for ${name} on ${fqdn}") }
+            default: {
+                git::web::repo{$git_vhost:
+                    projectroot => "${real_basedir}/repositories",
+                    projects_list => "${real_basedir}/gitosis/projects.list",
+                }
+                case $gitweb_webserver {
+                    'lighttpd': { 
+                        exec{'add_lighttpd_to_repos_group':
+                            command => "usermod -a -G ${name} lighttpd",
+                            unless => "groups lighttpd | grep -q ' ${name}'",
+                            require => Package['lighttpd'],
+                            notify =>  Service['lighttpd'],
+                        }
+                    }
+                    default: { fail("no supported \$gitweb_webserver defined on ${fqdn}, so can't do git::web::repo: ${name}") }
+                }
+            }   
         }
     }
 }
