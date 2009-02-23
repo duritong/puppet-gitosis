@@ -56,11 +56,6 @@ define gitosis::repostorage(
             }
             default: {
                 include gitosis::daemon::vhosts
-                file{'/srv/git':
-                    ensure => directory,
-                    require => User['gitosisd'],
-                    owner => root, group => gitosisd, mode => 0750; 
-                }
                 file{"/srv/git/${git_vhost}":
                     ensure => "${real_basedir}/repositories",
                 }
