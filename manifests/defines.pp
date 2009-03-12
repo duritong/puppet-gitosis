@@ -139,12 +139,6 @@ define gitosis::emailnotification(
         require => [ File['/opt/git-hooks'], File["${repodir}/hooks/post-receive"] ],
     }
 
-    
-    Exec {
-        onlyif => "test -e ${repoconfig}",
-        require => Line["emailnotification_hook_for_${name}"],
-    }
-
     exec{"git config --file ${repoconfig} hooks.mailinglist ${mailinglist}": 
         unless => "git config --file ${repoconfig} hooks.mailinglist | grep -qE '^${mailinglist}$'",
     }
@@ -153,17 +147,22 @@ define gitosis::emailnotification(
         'mailinglist': { 
             exec{"git config --file ${repoconfig} hooks.announcelist ${mailinglist}": 
                 unless => "git config --file ${repoconfig} hooks.announcelist | grep -qE '^${mailinglist}$'",
+                onlyif => "test -e ${repoconfig}",
+                require => Line["emailnotification_hook_for_${name}"],
             }
         }
         'absent': {
             exec{"git config --file ${repoconfig} hooks.announcelist": 
-                onlyif => "git config --file ${repoconfig} hooks.announcelist > /dev/null",
+                onlyif => [ "test -e ${repoconfig}", "git config --file ${repoconfig} hooks.announcelist > /dev/null"],
+                require => Line["emailnotification_hook_for_${name}"],
             }
             
         }
         default: {
             exec{"git config --file ${repoconfig} hooks.announcelist ${announcelist}": 
                 unless => "git config --file ${repoconfig} hooks.announcelist | grep -qE '^${announcelist}$'",
+                onlyif => "test -e ${repoconfig}",
+                require => Line["emailnotification_hook_for_${name}"],
             }
         }
     }
@@ -171,10 +170,13 @@ define gitosis::emailnotification(
     if $envelopesender { 
         exec{"git config --file ${repoconfig} hooks.envelopesender ${envelopesender}":
             unless => "git config --file ${repoconfig} hooks.envelopesender | grep -qE '^${envelopesender}$'",
+            onlyif => "test -e ${repoconfig}",
+            require => Line["emailnotification_hook_for_${name}"],
         }
     } else {
         exec{"git config --file ${repoconfig} hooks.envelopesender --unset":
-            onlyif => "git config --file ${repoconfig} hooks.envelopesender > /dev/null",
+            onlyif => [ "test -e ${repoconfig}", "git config --file ${repoconfig} hooks.envelopesender > /dev/null" ],
+            require => Line["emailnotification_hook_for_${name}"],
         }
     }
 
@@ -182,16 +184,21 @@ define gitosis::emailnotification(
         'name': {
             exec{"git config --file ${repoconfig} hooks.emailprefix '[${name}]'":
               unless => "git config --file ${repoconfig} hooks.emailprefix | grep -qE '[${name}]'",
+              onlyif => "test -e ${repoconfig}",
+              require => Line["emailnotification_hook_for_${name}"],
             }
         }
         'absent': {
             exec{"git config --file ${repoconfig} hooks.emailprefix --unset":
-                onlyif => "git config --file ${repoconfig} hooks.emailprefix > /dev/null"
+                onlyif => [ "test -e ${repoconfig}", "git config --file ${repoconfig} hooks.emailprefix > /dev/null" ],
+                require => Line["emailnotification_hook_for_${name}"],
             }
         }
         default: {
             exec{"git config --file ${repoconfig} hooks.emailprefix '[${emailprefix}]'":
               unless => "git config --file ${repoconfig} hooks.emailprefix | grep -qE '[${emailprefix}]'",
+              onlyif => "test -e ${repoconfig}",
+              require => Line["emailnotification_hook_for_${name}"],
             }
         }
     }
@@ -199,10 +206,13 @@ define gitosis::emailnotification(
     if $generatepatch {
         exec{"git config --file ${repoconfig} hooks.generatepatch ${generatepatch}": 
             unless => "git config --file ${repoconfig} hooks.generatepatch | grep -qE '^${generatepatch}$'",
+            onlyif => "test -e ${repoconfig}",
+            require => Line["emailnotification_hook_for_${name}"],
         }
     } else {
         exec{"git config --file ${repoconfig} hooks.generatepatch --unset":
-            onlyif => "git config --file ${repoconfig} hooks.generatepatch > /dev/null"
+            onlyif => [ "test -e ${repoconfig}" ,"git config --file ${repoconfig} hooks.generatepatch > /dev/null" ], 
+            require => Line["emailnotification_hook_for_${name}"],
         }
     }
 }
