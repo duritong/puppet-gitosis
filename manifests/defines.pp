@@ -3,10 +3,16 @@
 # if you don't like to run a git-daemon for the gitosis daemon
 # please set the global variabl $gitosis_daemon to false.
 
+# admins: if set to an emailaddress we will add a email diff hook
+# admins_generatepatch: wether to include a patch
+# admins_sender: which sender to use
 define gitosis::repostorage(
     $basedir = 'absent',
     $uid = 'absent',
     $gid = 'uid',
+    $admins = 'absent',
+    $admins_generatepatch = true,
+    $admins_sender = false,
     $initial_admin_pubkey,
     $sitename = 'absent',
     $git_vhost = 'absent',
@@ -92,6 +98,26 @@ define gitosis::repostorage(
             }   
         }
     }
+
+    gitosis::emailnotification{"gitosis-admin_${name}":
+        gitrepo => $name,
+        gitosis_repo => $name,
+        basedir => $real_basedir,
+        mailinglist => $admins,
+        envelopesender => $admins_sender,
+        generatepatch => $admins_generatepatch,
+        require => File["${real_basedir}/repositories/gitosis-admin.git/hooks/post-update"],
+    }
+    if $admins != 'absent'  {
+        Gitosis::Emailnotification["gitosis-admin_${name}"]{
+            mailinglist => $admins,
+        }
+    } else {
+        Gitosis::Emailnotification["gitosis-admin_${name}"]{
+            ensure => absent,
+            mailinglist => 'root',
+        }
+    }
 }
 
 # you can define wether to receive post-receive emails and to which address
@@ -110,6 +136,7 @@ define gitosis::repostorage(
 #   - other string: use this string in brackets: [$emailprefix]
 # generatepatch: wether to generate a patch or not
 define gitosis::emailnotification(
+    $gitrepo = 'absent',
     $ensure = present,
     $gitosis_repo,
     $basedir = 'absent',
@@ -122,9 +149,15 @@ define gitosis::emailnotification(
 
     include gitosis::hooks
 
+    if $gitrepo == 'absent' {
+        $real_gitrepo = $name
+    } else { 
+        $real_gitrepo = $gitrepo
+    }
+
     $repodir = $basedir ? {
-        'absent' => "/home/${gitosis_repo}/repositories/${name}.git",
-        default => "${basedir}/repositories/${name}.git"
+        'absent' => "/home/${gitosis_repo}/repositories/${real_gitrepo}.git",
+        default => "${basedir}/repositories/${real_gitrepo}.git"
     }
     $repoconfig = "${repodir}/config"
 
@@ -182,8 +215,8 @@ define gitosis::emailnotification(
 
     case $emailprefix {
         'name': {
-            exec{"git config --file ${repoconfig} hooks.emailprefix '[${name}]'":
-              unless => "git config --file ${repoconfig} hooks.emailprefix | grep -qE '[${name}]'",
+            exec{"git config --file ${repoconfig} hooks.emailprefix '[${real_gitrepo}]'":
+              unless => "git config --file ${repoconfig} hooks.emailprefix | grep -qE '[${real_gitrepo}]'",
               onlyif => "test -e ${repoconfig}",
               require => Line["emailnotification_hook_for_${name}"],
             }
