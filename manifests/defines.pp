@@ -176,7 +176,7 @@ define gitosis::emailnotification(
             $real_emailprefix_set = '--unset'
         }
         default: {
-            $real_emailprefix = '"[${emailprefix}]"'
+            $real_emailprefix = "'[${emailprefix}]'"
             $real_emailprefix_set = ''
         }
     }
