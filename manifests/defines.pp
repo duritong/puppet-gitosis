@@ -110,6 +110,7 @@ define gitosis::repostorage(
 #   - other string: use this string in brackets: [$emailprefix]
 # generatepatch: wether to generate a patch or not
 define gitosis::emailnotification(
+    $ensure = present,
     $gitosis_repo,
     $basedir = 'absent',
     $mailinglist,
@@ -128,15 +129,20 @@ define gitosis::emailnotification(
     $repoconfig = "${repodir}/config"
 
     file{"${repodir}/hooks/post-receive":
-        ensure => '/opt/git-hooks/post-receive-email',
-        force => true,
-        require => File['/opt/git-hooks'],
+        ensure => file,
+        owner => root, group => 0, mode => 0755;
+    }
+    line{"emailnotification_hook_for_${name}":
+        ensure => $ensure,
+        line => '. /opt/git-hooks/post-receive-email',
+        file => "${repodir}/hooks/post-receive",
+        require => [ File['/opt/git-hooks'], File["${repodir}/hooks/post-receive"] ],
     }
 
     
     Exec {
         onlyif => "test -e ${repoconfig}",
-        require => File["${repodir}/hooks/post-receive-email"],
+        require => Line["emailnotification_hook_for_${name}"],
     }
 
     exec{"git config --file ${repoconfig} hooks.mailinglist ${mailinglist}": 
