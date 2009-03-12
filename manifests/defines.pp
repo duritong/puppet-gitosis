@@ -168,7 +168,7 @@ define gitosis::emailnotification(
 
     case $emailprefix {
         'name': {
-            $real_emailprefix = "[${name}]"
+            $real_emailprefix = '"[${name}]"'
             $real_emailprefix_set = ''
         }
         'absent': {
@@ -176,7 +176,7 @@ define gitosis::emailnotification(
             $real_emailprefix_set = '--unset'
         }
         default: {
-            $real_emailprefix = "[${emailprefix}]"
+            $real_emailprefix = '"[${emailprefix}]"'
             $real_emailprefix_set = ''
         }
     }
