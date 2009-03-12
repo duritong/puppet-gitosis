@@ -100,7 +100,7 @@ define gitosis::repostorage(
     }
 
     gitosis::emailnotification{"gitosis-admin_${name}":
-        gitrepo => $name,
+        gitrepo => "gitosis-admin",
         gitosis_repo => $name,
         basedir => $real_basedir,
         envelopesender => $admins_sender,
