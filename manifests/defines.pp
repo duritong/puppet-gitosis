@@ -215,8 +215,8 @@ define gitosis::emailnotification(
 
     case $emailprefix {
         'name': {
-            exec{"git config --file ${repoconfig} hooks.emailprefix '[${real_gitrepo}] '":
-              unless => "git config --file ${repoconfig} hooks.emailprefix | grep -qE '[${real_gitrepo}] '",
+            exec{"git config --file ${repoconfig} hooks.emailprefix '[${real_gitrepo}]'":
+              unless => "git config --file ${repoconfig} hooks.emailprefix | grep -qE '[${real_gitrepo}]'",
               onlyif => "test -e ${repoconfig}",
               require => Line["emailnotification_hook_for_${name}"],
             }
@@ -228,8 +228,8 @@ define gitosis::emailnotification(
             }
         }
         default: {
-            exec{"git config --file ${repoconfig} hooks.emailprefix '[${emailprefix}] '":
-              unless => "git config --file ${repoconfig} hooks.emailprefix | grep -qE '[${emailprefix}] '",
+            exec{"git config --file ${repoconfig} hooks.emailprefix '[${emailprefix}]'":
+              unless => "git config --file ${repoconfig} hooks.emailprefix | grep -qE '[${emailprefix}]'",
               onlyif => "test -e ${repoconfig}",
               require => Line["emailnotification_hook_for_${name}"],
             }
