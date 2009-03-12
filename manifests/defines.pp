@@ -115,7 +115,7 @@ define gitosis::emailnotification(
     $mailinglist,
     $announcelist = 'mailinglist',
     $envelopesender = 'absent',
-    $emailprefix = 'absent',
+    $emailprefix = 'name',
     $generatepatch = true
 ){
 
