@@ -93,3 +93,100 @@ define gitosis::repostorage(
         }
     }
 }
+
+# you can define wether to receive post-receive emails and to which address
+# name: name of the git repo we'd like to have emailnotification
+# gitosis_repo: the gitosis_repo in which the git repo is contained
+# basedir: basedir of the gitosis_repo. If absent default schema we'll be used.
+# mailinglist: the mail address we'd like to spam with commit emails
+# announcelist: the mail address we'd like to spam if annotated tags have been pushed. Options:
+#   - mailinglist: the same as the mailinglist (*Default*)
+#   - absent: unset
+#   - other string: the address
+# envelopesender: wether we'd like to set an envelope sender
+# emailprefix: which prefix a subject should have. Options:
+#   - absent: will be prefixed with [SCM] 
+#   - name: use the name of the git repo to prefix: [$gitrepo_name] (*Default*)
+#   - other string: use this string in brackets: [$emailprefix]
+# generatepatch: wether to generate a patch or not
+define gitosis::emailnotification(
+    $gitosis_repo,
+    $basedir = 'absent',
+    $mailinglist,
+    $announcelist = 'mailinglist',
+    $envelopesender = 'absent',
+    $emailprefix = 'absent',
+    $generatepatch = true
+){
+
+    include gitosis::hooks
+
+    $repodir = $basedir ? {
+        'absent' => "/home/${gitosis_repo}/repositories/${name}.git",
+        default => "${basedir}/repositories/${name}.git"
+    }
+    $repoconfig = "${repdoir}/config"
+
+    file{"${repodir}/hooks/post-receive-email":
+        ensure => '/opt/git-hooks/post-receive-email',
+        force => true,
+        require => File['/opt/git-hooks/post-receive-email'],
+    }
+
+    Exec {
+        onlyif => "test -e ${repoconfig}",
+        require => File["${repodir}/hooks/post-receive-email"],
+    }
+
+    exec{"git config --file ${repoconfig} hooks.mailinglist ${mailinglist}": }
+
+    case $announcelist {
+        'mailinglist': { 
+            $real_announcelist = $mailinglist 
+            $real_announcelist_set = ''
+        }
+        'absent': {
+            $real_announcelist = ''
+            $real_announcelist_set = '--unset'
+        }
+        default: {
+            $real_announcelist = $announcelist
+            $real_announcelist_set = ''
+        }
+    }
+    exec{"git config --file ${repoconfig} ${real_announcelist_set} hooks.announcelist ${real_announcelist}": }
+
+    if $envelopesender == 'absent' { 
+            $real_envelopesender = ''
+            $real_envelopesender_set = '--unset'
+    } else {
+            $real_envelopesender = $envelopesender
+            $real_envelopesender_set = ''
+    }
+    exec{"git config --file ${repoconfig} ${real_envelopesender_set} hooks.envelopesender ${real_envelopesender}": }
+
+    case $emailprefix {
+        'name': {
+            $real_emailprefix = "[${name}]"
+            $real_emailprefix_set = ''
+        }
+        'absent': {
+            $real_emailprefix = ''
+            $real_emailprefix_set = '--unset'
+        }
+        default: {
+            $real_emailprefix = "[${emailprefix}]"
+            $real_emailprefix_set = ''
+        }
+    }
+    exec{"git config --file ${repoconfig} ${real_emailprefix_set} hooks.emailprefix ${real_emailprefix}": }
+
+    if $generatepatch {
+        $real_generatepatch = true
+        $real_generatepatch_set = '--unset'
+    } else {
+        $real_generatepatch = ''
+        $real_generatepatch_set = '--unset'
+    }
+    exec{"git config --file ${repoconfig} ${real_generatepatch_set} hooks.generatepatch ${real_generatepatch}": }
+}
