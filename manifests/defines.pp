@@ -184,7 +184,7 @@ define gitosis::emailnotification(
 
     if $generatepatch {
         $real_generatepatch = true
-        $real_generatepatch_set = '--unset'
+        $real_generatepatch_set = ''
     } else {
         $real_generatepatch = ''
         $real_generatepatch_set = '--unset'
