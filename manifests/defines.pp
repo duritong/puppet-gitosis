@@ -103,7 +103,7 @@ define gitosis::repostorage(
 #   - mailinglist: the same as the mailinglist (*Default*)
 #   - absent: unset
 #   - other string: the address
-# envelopesender: wether we'd like to set an envelope sender
+# envelopesender: wether we'd like to set an envelope sender. Absent: false
 # emailprefix: which prefix a subject should have. Options:
 #   - absent: will be prefixed with [SCM] 
 #   - name: use the name of the git repo to prefix: [$gitrepo_name] (*Default*)
@@ -114,7 +114,7 @@ define gitosis::emailnotification(
     $basedir = 'absent',
     $mailinglist,
     $announcelist = 'mailinglist',
-    $envelopesender = 'absent',
+    $envelopesender = false,
     $emailprefix = 'name',
     $generatepatch = true
 ){
@@ -162,7 +162,7 @@ define gitosis::emailnotification(
         }
     }
 
-    if $envelopesender == 'absent' { 
+    if $envelopesender { 
         exec{"git config --file ${repoconfig} hooks.envelopesender ${envelopesender}":
             unless => "git config --file ${repoconfig} hooks.envelopesender | grep -qE '^${envelopesender}$'",
         }
