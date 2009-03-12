@@ -130,7 +130,7 @@ define gitosis::emailnotification(
     file{"${repodir}/hooks/post-receive-email":
         ensure => '/opt/git-hooks/post-receive-email',
         force => true,
-        require => File['/opt/git-hooks/post-receive-email'],
+        require => File['/opt/git-hooks'],
     }
 
     Exec {
