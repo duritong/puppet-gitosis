@@ -105,6 +105,7 @@ define gitosis::repostorage(
         basedir => $real_basedir,
         envelopesender => $admins_sender,
         generatepatch => $admins_generatepatch,
+        emailprefix => "${name}: gitosis-admin",
         require => File["${real_basedir}/repositories/gitosis-admin.git/hooks/post-update"],
     }
     if $admins != 'absent'  {
