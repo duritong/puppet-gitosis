@@ -125,7 +125,7 @@ define gitosis::emailnotification(
         'absent' => "/home/${gitosis_repo}/repositories/${name}.git",
         default => "${basedir}/repositories/${name}.git"
     }
-    $repoconfig = "${repdoir}/config"
+    $repoconfig = "${repdodir}/config"
 
     file{"${repodir}/hooks/post-receive-email":
         ensure => '/opt/git-hooks/post-receive-email',
