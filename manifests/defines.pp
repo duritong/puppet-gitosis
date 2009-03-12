@@ -103,7 +103,6 @@ define gitosis::repostorage(
         gitrepo => $name,
         gitosis_repo => $name,
         basedir => $real_basedir,
-        mailinglist => $admins,
         envelopesender => $admins_sender,
         generatepatch => $admins_generatepatch,
         require => File["${real_basedir}/repositories/gitosis-admin.git/hooks/post-update"],
