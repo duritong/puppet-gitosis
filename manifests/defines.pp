@@ -139,55 +139,64 @@ define gitosis::emailnotification(
         require => File["${repodir}/hooks/post-receive-email"],
     }
 
-    exec{"git config --file ${repoconfig} hooks.mailinglist ${mailinglist}": }
+    exec{"git config --file ${repoconfig} hooks.mailinglist ${mailinglist}": 
+        unless => "git config --file ${repoconfig} hooks.mailinglist | grep -qE '^${mailinglist}$'",
+    }
 
     case $announcelist {
         'mailinglist': { 
-            $real_announcelist = $mailinglist 
-            $real_announcelist_set = ''
+            exec{"git config --file ${repoconfig} hooks.announcelist ${mailinglist}": 
+                unless => "git config --file ${repoconfig} hooks.announcelist | grep -qE '^${mailinglist}$'",
+            }
         }
         'absent': {
-            $real_announcelist = ''
-            $real_announcelist_set = '--unset'
+            exec{"git config --file ${repoconfig} hooks.announcelist": 
+                onlyif => "git config --file ${repoconfig} hooks.announcelist > /dev/null",
+            }
+            
         }
         default: {
-            $real_announcelist = $announcelist
-            $real_announcelist_set = ''
+            exec{"git config --file ${repoconfig} hooks.announcelist ${announcelist}": 
+                unless => "git config --file ${repoconfig} hooks.announcelist | grep -qE '^${announcelist}$'",
+            }
         }
     }
-    exec{"git config --file ${repoconfig} ${real_announcelist_set} hooks.announcelist ${real_announcelist}": }
 
     if $envelopesender == 'absent' { 
-            $real_envelopesender = ''
-            $real_envelopesender_set = '--unset'
+        exec{"git config --file ${repoconfig} hooks.envelopesender ${envelopesender}":
+            unless => "git config --file ${repoconfig} hooks.envelopesender | grep -qE '^${envelopesender}$'",
+        }
     } else {
-            $real_envelopesender = $envelopesender
-            $real_envelopesender_set = ''
+        exec{"git config --file ${repoconfig} hooks.envelopesender --unset":
+            onlyif => "git config --file ${repoconfig} hooks.envelopesender > /dev/null",
+        }
     }
-    exec{"git config --file ${repoconfig} ${real_envelopesender_set} hooks.envelopesender ${real_envelopesender}": }
 
     case $emailprefix {
         'name': {
-            $real_emailprefix = "'[${name}]'"
-            $real_emailprefix_set = ''
+            exec{"git config --file ${repoconfig} hooks.emailprefix '[${name}]'":
+              unless => "git config --file ${repoconfig} hooks.emailprefix | grep -qE '[${name}]'",
+            }
         }
         'absent': {
-            $real_emailprefix = ''
-            $real_emailprefix_set = '--unset'
+            exec{"git config --file ${repoconfig} hooks.emailprefix --unset":
+                onlyif => "git config --file ${repoconfig} hooks.emailprefix > /dev/null"
+            }
         }
         default: {
-            $real_emailprefix = "'[${emailprefix}]'"
-            $real_emailprefix_set = ''
+            exec{"git config --file ${repoconfig} hooks.emailprefix '[${emailprefix}]'":
+              unless => "git config --file ${repoconfig} hooks.emailprefix | grep -qE '[${emailprefix}]'",
+            }
         }
     }
-    exec{"git config --file ${repoconfig} ${real_emailprefix_set} hooks.emailprefix ${real_emailprefix}": }
 
     if $generatepatch {
-        $real_generatepatch = true
-        $real_generatepatch_set = ''
+        exec{"git config --file ${repoconfig} hooks.generatepatch ${generatepatch}": 
+            unless => "git config --file ${repoconfig} hooks.generatepatch | grep -qE '^${generatepatch}$'",
+        }
     } else {
-        $real_generatepatch = ''
-        $real_generatepatch_set = '--unset'
+        exec{"git config --file ${repoconfig} hooks.generatepatch --unset":
+            onlyif => "git config --file ${repoconfig} hooks.generatepatch > /dev/null"
+        }
     }
-    exec{"git config --file ${repoconfig} ${real_generatepatch_set} hooks.generatepatch ${real_generatepatch}": }
 }
