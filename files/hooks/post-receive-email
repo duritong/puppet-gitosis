@@ -1,6 +1,8 @@
 #!/bin/sh
 #
 # Copyright (c) 2007 Andy Parkins
+# extended to support sending of diffs
+# 2009 by Immerda Project Group <admin(at)immerda.ch>
 #
 # An example hook script to mail out commit update information.  This hook
 # sends emails listing new revisions to the repository introduced by the
