@@ -42,7 +42,7 @@ define gitosis::repostorage(
     }
 
     exec{"create_gitosis_${name}":
-        command => "gitosis-init < ${real_basedir}/initial_admin_pubkey.puppet",
+        command => "cd ${real_basedir} && gitosis-init < ${real_basedir}/initial_admin_pubkey.puppet",
         unless => "test -d ${real_basedir}/repositories",
         user => $name,
         require => [ Package['gitosis'], File["${real_basedir}/initial_admin_pubkey.puppet"] ],
