@@ -10,6 +10,8 @@ define gitosis::repostorage(
     $basedir = 'absent',
     $uid = 'absent',
     $gid = 'uid',
+    $password = 'absent',
+    $password_crypted = true,
     $admins = 'absent',
     $admins_generatepatch = true,
     $admins_sender = false,
@@ -29,6 +31,8 @@ define gitosis::repostorage(
         homedir => $real_basedir,
         uid => $uid,
         gid => $gid,
+        password => $password,
+        password_crypted => $password_crypted,
     }
 
     file{"${real_basedir}/initial_admin_pubkey.puppet":
