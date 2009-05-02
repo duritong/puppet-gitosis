@@ -90,7 +90,7 @@ define gitosis::repostorage(
                 }
                 case $gitweb_webserver {
                     'lighttpd': { 
-                        exec{'add_lighttpd_to_repos_group':
+                        exec{"add_lighttpd_to_repos_group_${name}":
                             command => "usermod -a -G ${name} lighttpd",
                             unless => "groups lighttpd | grep -q ' ${name}'",
                             require => Package['lighttpd'],
