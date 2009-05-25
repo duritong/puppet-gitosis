@@ -8,7 +8,7 @@ class gitosis::daemon inherits git::daemon {
     user::managed{'gitosisd':
         name_comment => "gitosis git-daemon user",
         managehome => false,
-        homedir_mode => '/srv/git',
+        homedir => '/srv/git',
         shell => $operatingsystem ? {
             debian => '/usr/sbin/nologin',
             ubuntu => '/usr/sbin/nologin',
