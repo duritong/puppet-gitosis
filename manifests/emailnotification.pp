@@ -59,7 +59,7 @@ define gitosis::emailnotification(
         }
     } else {
         exec{"git config --file ${repoconfig} --unset hooks.mailinglist":
-            onlyif => "git config --file ${repoconfig} hooks.mailinglist | grep -qE '^${mailinglist}$'",
+            onlyif => "git config --file ${repoconfig} hooks.mailinglist > /dev/null",
         }
     }
 
@@ -98,21 +98,19 @@ define gitosis::emailnotification(
         }
     }
 
-    case $emailprefix {
-        'name': {
-            exec{"git config --file ${repoconfig} hooks.emailprefix '[${real_gitrepo}]'":
-              unless => "git config --file ${repoconfig} hooks.emailprefix | grep -qE '[${real_gitrepo}]'",
-              onlyif => "test -e ${repoconfig}",
-              require => Line["emailnotification_hook_for_${name}"],
-            }
+    if $emailprefix == 'name' and $ensure == 'present' {
+        exec{"git config --file ${repoconfig} hooks.emailprefix '[${real_gitrepo}]'":
+            unless => "git config --file ${repoconfig} hooks.emailprefix | grep -qE '[${real_gitrepo}]'",
+            onlyif => "test -e ${repoconfig}",
+            require => Line["emailnotification_hook_for_${name}"],
         }
-        'absent': {
+    } else {
+        if $emailprefix == 'absent' or $ensure != 'present' {
             exec{"git config --file ${repoconfig} --unset hooks.emailprefix":
                 onlyif => [ "test -e ${repoconfig}", "git config --file ${repoconfig} hooks.emailprefix > /dev/null" ],
                 require => Line["emailnotification_hook_for_${name}"],
             }
-        }
-        default: {
+        } else {
             exec{"git config --file ${repoconfig} hooks.emailprefix '[${emailprefix}]'":
               unless => "git config --file ${repoconfig} hooks.emailprefix | grep -qE '[${emailprefix}]'",
               onlyif => "test -e ${repoconfig}",
