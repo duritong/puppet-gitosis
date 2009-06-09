@@ -90,11 +90,24 @@ define gitosis::repostorage(
                 }
                 case $gitweb_webserver {
                     'lighttpd': { 
-                        exec{"add_lighttpd_to_repos_group_${name}":
-                            command => "usermod -a -G ${name} lighttpd",
-                            unless => "groups lighttpd | grep -q ' ${name}'",
+                        augeas{"add_lighttpd_to_repos_group_${name}":
+                            context => "/files/etc/group",
+                            changes => [ "ins user after ${name}/user[last()]",
+                                         "set ${name}/user[last()]  lighttpd" ],
+                            onlyif => "match ${name}/*[../user='lighttpd'] size == 0",
+                            require => Package['apache'],
                             require => Package['lighttpd'],
                             notify =>  Service['lighttpd'],
+                        }
+                    }
+                    'apache': {
+                        augeas{"add_apache_to_repos_group_${name}":
+                            context => "/files/etc/group",
+                            changes => [ "ins user after ${name}/user[last()]",
+                                         "set ${name}/user[last()]  apache" ],
+                            onlyif => "match ${name}/*[../user='apache'] size == 0",
+                            require => Package['apache'],
+                            notify =>  Service['apache'],
                         }
                     }
                     default: { fail("no supported \$gitweb_webserver defined on ${fqdn}, so can't do git::web::repo: ${name}") }
