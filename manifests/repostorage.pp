@@ -71,12 +71,15 @@ define gitosis::repostorage(
                 }
             }
         }
-        exec{"add_${name}_to_repos_group":
-            command => "usermod -a -G ${name} gitosisd",
-            unless => "groups gitosisd | grep -q ' ${name}'",
-            require => [ User['gitosisd'], Group[$name] ],
-            notify =>  Service['git-daemon'],
+        augeas{"add_gitosisd_to_group_${name}":
+          context => "/files/etc/group",
+          changes => [ "ins user after ${name}/user[last()]",
+                       "set ${name}/user[last()]  gitosisd" ],
+          onlyif => "match ${name}/*[../user='gitosisd'] size == 0",
+          require => [ User['gitosisd'], Group[$name] ],
+          notify =>  Service['git-daemon'],
         }
+
     }
 
     if $gitweb {
@@ -95,7 +98,6 @@ define gitosis::repostorage(
                             changes => [ "ins user after ${name}/user[last()]",
                                          "set ${name}/user[last()]  lighttpd" ],
                             onlyif => "match ${name}/*[../user='lighttpd'] size == 0",
-                            require => Package['apache'],
                             require => Package['lighttpd'],
                             notify =>  Service['lighttpd'],
                         }
