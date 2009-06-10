@@ -52,7 +52,7 @@ define gitosis::repostorage(
     file{"${real_basedir}/repositories/gitosis-admin.git/hooks/post-update":
         require => Exec["create_gitosis_${name}"],
         owner => $name, group => $name, mode => 0755;
-    } 
+    }
 
     case $gitosis_daemon {
         '': { $gitosis_daemon = true }
@@ -63,7 +63,7 @@ define gitosis::repostorage(
             'absent': {
                 file{'/srv/git':
                     ensure => "${real_basedir}/repositories",
-                }     
+                }
             }
             default: {
                 include ::gitosis::daemon::vhosts
@@ -93,7 +93,7 @@ define gitosis::repostorage(
                     sitename => sitename,
                 }
                 case $gitweb_webserver {
-                    'lighttpd': { 
+                    'lighttpd': {
                         augeas{"add_lighttpd_to_repos_group_${name}":
                             context => "/files/etc/group",
                             changes => [ "ins user after ${name}/user[last()]",
@@ -115,7 +115,7 @@ define gitosis::repostorage(
                     }
                     default: { fail("no supported \$gitweb_webserver defined on ${fqdn}, so can't do git::web::repo: ${name}") }
                 }
-            }   
+            }
         }
     }
 
