@@ -99,7 +99,7 @@ define gitosis::repostorage(
                             changes => [ "ins user after ${name}/user[last()]",
                                          "set ${name}/user[last()]  lighttpd" ],
                             onlyif => "match ${name}/*[../user='lighttpd'] size == 0",
-                            require => Package['lighttpd'],
+                            require => [ Package['lighttpd'], Group[$name] ],
                             notify =>  Service['lighttpd'],
                         }
                     }
@@ -109,7 +109,7 @@ define gitosis::repostorage(
                             changes => [ "ins user after ${name}/user[last()]",
                                          "set ${name}/user[last()]  apache" ],
                             onlyif => "match ${name}/*[../user='apache'] size == 0",
-                            require => Package['apache'],
+                            require => [ Package['apache'], Group[$name] ],
                             notify =>  Service['apache'],
                         }
                     }
