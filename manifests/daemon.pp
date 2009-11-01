@@ -2,7 +2,7 @@ class gitosis::daemon inherits git::daemon {
     File['/etc/sysconfig/git-daemon']{
         source => [ "puppet://$server/files/gitosis/sysconfig/${fqdn}/git-daemon",
                     "puppet://$server/files/gitosis/sysconfig/git-daemon",
-                    "puppet://$server/gitosis/sysconfig/git-daemon" ],
+                    "puppet://$server/modules/gitosis/sysconfig/git-daemon" ],
         require +> User['gitosisd'],
     }
     user::managed{'gitosisd':
