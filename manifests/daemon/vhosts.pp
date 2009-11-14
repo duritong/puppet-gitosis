@@ -5,8 +5,8 @@ class gitosis::daemon::vhosts inherits gitosis::daemon {
         owner => root, group => gitosisd, mode => 0750;
     }  
     File['/etc/sysconfig/git-daemon']{
-        source => [ "puppet://$server/files/gitosis/sysconfig/${fqdn}/git-daemon.vhosts",
-                    "puppet://$server/files/gitosis/sysconfig/git-daemon.vhosts",
+        source => [ "puppet://$server/modules/site-gitosis/sysconfig/${fqdn}/git-daemon.vhosts",
+                    "puppet://$server/modules/site-gitosis/sysconfig/git-daemon.vhosts",
                     "puppet://$server/modules/gitosis/sysconfig/git-daemon.vhosts" ],
     }
 }
