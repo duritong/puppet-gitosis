@@ -16,11 +16,14 @@ define gitosis::repostorage(
   $admins = 'absent',
   $admins_generatepatch = true,
   $admins_sender = false,
-  $initial_admin_pubkey,
+  $initial_admin_pubkey = 'absent',
   $sitename = 'absent',
   $git_vhost = 'absent',
   $gitweb = true
 ){
+  if ($ensure == 'present') and ($initial_admin_pubkey == 'absent') {
+    fail("You need to pass \$initial_admin_pubkey if repostorage ${name} should be present!")
+  }
   include ::gitosis
 
   $real_basedir = $basedir ? {
