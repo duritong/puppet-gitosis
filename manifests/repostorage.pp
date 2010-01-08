@@ -125,7 +125,7 @@ define gitosis::repostorage(
     require => [ Package[$webuser], Group[$name] ],
     notify =>  Service[$webuser],
   }
-  if $gitweb and present == 'present' {
+  if $gitweb and $present == 'present' {
     case $git_vhost {
       'absent': { fail("can't do gitweb if \$git_vhost isn't set for ${name} on ${fqdn}") }
       default: {
@@ -147,8 +147,11 @@ define gitosis::repostorage(
     Git::Web::Repo[$git_vhost]{
       ensure => 'absent',
     }
-    Augeas["manage_webuser_in_repos_group_${name}"]{
-      changes => "rm ${name}/user[.='${webuser}']",
+    # if present is absent we removed the user anyway
+    if ($present != 'absent') {
+      Augeas["manage_webuser_in_repos_group_${name}"]{
+        changes => "rm ${name}/user[.='${webuser}']",
+      }
     }
   }
 }
