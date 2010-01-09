@@ -126,8 +126,20 @@ define gitosis::repostorage(
   }
   augeas{"manage_webuser_in_repos_group_${name}":
     context => "/files/etc/group",
-    require => [ Package[$webuser], Group[$name] ],
-    notify =>  Service[$webuser],
+  }
+  if defined(Package[$webuser]){
+    Augeas["manage_webuser_in_repos_group_${name}"]{
+      require => [ Package[$webuser], Group[$name] ],
+    }
+  } else {
+    Augeas["manage_webuser_in_repos_group_${name}"]{
+      require => Group[$name],
+    }
+  }
+  if defined(Service[$webuser]){
+    Augeas["manage_webuser_in_repos_group_${name}"]{
+      notify => Service[$webuser],
+    }
   }
   if $gitweb and $ensure == 'present' {
     case $git_vhost {
