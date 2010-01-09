@@ -109,6 +109,7 @@ define gitosis::repostorage(
   } else {
     File[$git_vhost_link]{
       ensure => absent,
+      force => true,
     }
     Augeas["manage_gitosisd_in_group_${name}"]{
       changes => "rm user ${name}/user[.='gitosisd']",
