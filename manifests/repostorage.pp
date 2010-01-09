@@ -85,7 +85,6 @@ define gitosis::repostorage(
   }
   augeas{"manage_gitosisd_in_group_${name}":
     context => "/files/etc/group",
-    notify =>  Service['git-daemon'],
   }
   case $git_vhost {
     'absent': { $git_vhost_link = '/srv/git' }
@@ -105,6 +104,7 @@ define gitosis::repostorage(
                    "set ${name}/user[last()]  gitosisd" ],
       onlyif => "match ${name}/*[../user='gitosisd'] size == 0",
       require => [ User['gitosisd'], Group[$name] ],
+      notify =>  Service['git-daemon'],
     }
   } else {
     File[$git_vhost_link]{
