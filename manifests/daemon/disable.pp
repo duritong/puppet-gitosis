@@ -3,7 +3,7 @@ class gitosis::daemon::disable inherits gitosis::daemon {
   File['/etc/sysconfig/git-daemon']{
     ensure => absent,
   }
-  User::Managed{'gitosisd':
+  User::Managed['gitosisd']{
     ensure => 'absent'
   }
 }
