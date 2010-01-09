@@ -114,6 +114,9 @@ define gitosis::repostorage(
     Augeas["manage_gitosisd_in_group_${name}"]{
       changes => "rm user ${name}/user[.='gitosisd']",
     }
+    if !$gitosis_daemon {
+      include ::gitosis::daemon::disable
+    }
   }
 
   git::web::repo{$git_vhost: }
