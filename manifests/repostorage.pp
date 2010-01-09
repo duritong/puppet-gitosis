@@ -125,7 +125,7 @@ define gitosis::repostorage(
     require => [ Package[$webuser], Group[$name] ],
     notify =>  Service[$webuser],
   }
-  if $gitweb and $present == 'present' {
+  if $gitweb and $ensure == 'present' {
     case $git_vhost {
       'absent': { fail("can't do gitweb if \$git_vhost isn't set for ${name} on ${fqdn}") }
       default: {
