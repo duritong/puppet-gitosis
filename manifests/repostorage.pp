@@ -40,6 +40,11 @@ define gitosis::repostorage(
     password_crypted => $password_crypted,
   }
 
+  include ::gitosis::gitaccess
+  augeas{"manage_${name}_in_group_gitaccess":
+    context => "/files/etc/group",
+    require => [ Group['gitaccess'], User::Managed[$name] ],
+  }
   if $ensure == 'present' {
     file{"${real_basedir}/initial_admin_pubkey.puppet":
       content => "${initial_admin_pubkey}\n",
@@ -78,6 +83,15 @@ define gitosis::repostorage(
         mailinglist => 'root',
       }
     }
+    Augeas["manage_${name}_in_group_gitaccess"]{
+      changes => [ "ins user after gitaccess/user[last()]",
+                   "set gitaccess/user[last()]  ${name}" ],
+      onlyif => "match gitaccess/*[../user='${name}'] size == 0",
+    }
+  } else {
+    Augeas["manage_${name}_in_group_gitaccess"]{
+      changes => "rm user gitaccess/user[.='${name}']",
+    }
   }
 
   case $gitosis_daemon {
@@ -85,11 +99,6 @@ define gitosis::repostorage(
   }
   augeas{"manage_gitosisd_in_group_${name}":
     context => "/files/etc/group",
-  }
-  include ::gitosis::gitaccess
-  augeas{"manage_${name}_in_group_gitaccess":
-    context => "/files/etc/group",
-    require => Group['gitaccess'],
   }
   case $git_vhost {
     'absent': { $git_vhost_link = '/srv/git' }
@@ -111,11 +120,6 @@ define gitosis::repostorage(
       require => [ User['gitosisd'], Group[$name] ],
       notify =>  Service['git-daemon'],
     }
-    Augeas["manage_${name}_in_group_gitaccess"]{
-      changes => [ "ins user after gitaccess/user[last()]",
-                   "set gitaccess/user[last()]  ${name}" ],
-      onlyif => "match gitaccess/*[../user='${name}'] size == 0",
-    }
   } else {
     File[$git_vhost_link]{
       ensure => absent,
@@ -123,9 +127,6 @@ define gitosis::repostorage(
     }
     Augeas["manage_gitosisd_in_group_${name}"]{
       changes => "rm user ${name}/user[.='gitosisd']",
-    }
-    Augeas["manage_${name}_in_group_gitaccess"]{
-      changes => "rm user gitaccess/user[.='${name}']",
     }
     if !$gitosis_daemon {
       include ::gitosis::daemon::disable
