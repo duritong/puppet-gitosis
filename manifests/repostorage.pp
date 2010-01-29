@@ -133,32 +133,33 @@ define gitosis::repostorage(
     }
   }
 
-  git::web::repo{$git_vhost: }
-  case $gitweb_webserver {
-    'lighttpd','apache': { $webuser = $gitweb_webserver }
-    default: { fail("no supported \$gitweb_webserver defined on ${fqdn}, so can't do git::web::repo: ${name}") }
-  }
   augeas{"manage_webuser_in_repos_group_${name}":
     context => "/files/etc/group",
   }
-  if defined(Package[$webuser]){
-    Augeas["manage_webuser_in_repos_group_${name}"]{
-      require => [ Package[$webuser], Group[$name] ],
-    }
-  } else {
-    Augeas["manage_webuser_in_repos_group_${name}"]{
-      require => Group[$name],
-    }
-  }
-  if defined(Service[$webuser]){
-    Augeas["manage_webuser_in_repos_group_${name}"]{
-      notify => Service[$webuser],
-    }
-  }
+
+  git::web::repo{$git_vhost: }
   if $gitweb and $ensure == 'present' {
     case $git_vhost {
       'absent': { fail("can't do gitweb if \$git_vhost isn't set for ${name} on ${fqdn}") }
       default: {
+        case $gitweb_webserver {
+          'lighttpd','apache': { $webuser = $gitweb_webserver }
+          default: { fail("no supported \$gitweb_webserver defined on ${fqdn}, so can't do git::web::repo: ${name}") }
+        }
+        if defined(Package[$webuser]){
+          Augeas["manage_webuser_in_repos_group_${name}"]{
+            require => [ Package[$webuser], Group[$name] ],
+          }
+        } else {
+          Augeas["manage_webuser_in_repos_group_${name}"]{
+            require => Group[$name],
+          }
+        }
+        if defined(Service[$webuser]){
+          Augeas["manage_webuser_in_repos_group_${name}"]{
+            notify => Service[$webuser],
+          }
+        }
         Git::Web::Repo[$git_vhost]{
           projectroot => "${real_basedir}/repositories",
           projects_list => "${real_basedir}/gitosis/projects.list",
