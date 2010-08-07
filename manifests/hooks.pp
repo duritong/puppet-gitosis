@@ -2,7 +2,7 @@
 
 class gitosis::hooks {
     file{'/opt/git-hooks':
-        source => "puppet://$server/modules/gitosis/hooks",
+        source => "puppet:///modules/gitosis/hooks",
         recurse => true,
         purge => true,
         force => true,
