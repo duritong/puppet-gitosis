@@ -6,11 +6,16 @@
 # admins: if set to an emailaddress we will add a email diff hook
 # admins_generatepatch: wether to include a patch
 # admins_sender: which sender to use
+#
+# logmode:
+#   - default: Do normal logging including ips
+#   - anonym: Don't log ips
 define gitosis::repostorage(
   $ensure = 'present',
   $basedir = 'absent',
   $uid = 'absent',
   $gid = 'uid',
+  $logmode = 'default',
   $password = 'absent',
   $password_crypted = true,
   $admins = 'absent',
@@ -137,7 +142,9 @@ define gitosis::repostorage(
     context => "/files/etc/group",
   }
 
-  git::web::repo{$git_vhost: }
+  git::web::repo{$git_vhost:
+    logmode => $logmode,
+  }
   if $gitweb and $ensure == 'present' {
     case $git_vhost {
       'absent': { fail("can't do gitweb if \$git_vhost isn't set for ${name} on ${fqdn}") }
