@@ -145,6 +145,7 @@ define gitosis::repostorage(
   git::web::repo{$git_vhost:
     logmode => $logmode,
   }
+
   if $gitweb and $ensure == 'present' {
     case $git_vhost {
       'absent': { fail("can't do gitweb if \$git_vhost isn't set for ${name} on ${fqdn}") }
@@ -190,6 +191,38 @@ define gitosis::repostorage(
       Augeas["manage_webuser_in_repos_group_${name}"]{
         changes => "rm ${name}/user[.='${webuser}']",
       }
+    }
+  }
+
+  if $use_nagios {
+    $check_hostname = $git_vhost ? {
+      'absent' => $fqdn,
+      default => $git_vhost
+    }
+    sshd::nagios{"gitrepo_${name}":
+      ensure => $ensure,
+      port => 22,
+      check_hostname => $check_hostname,
+    }
+    nagios::service{"git_${name}":
+      ensure => $ensure ? {
+        'present' => $gitosis_daemon ? {
+          false => 'absent',
+          default => 'present'
+        },
+        default => $ensure
+      },
+      check_command => "check_git!${check_hostname}",
+    }
+    nagios::service::http{"gitweb_${name}":
+      check_domain => $git_vhost,
+      ensure => $ensure ? {
+        'present' => $gitweb ? {
+          false => 'absent',
+          default => 'present'
+        },
+        default => $ensure
+      },
     }
   }
 }
