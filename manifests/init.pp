@@ -3,7 +3,7 @@
 # GPLv3
 
 class gitosis {
-    case $operatingsystem {
-        default: { include gitosis::base }
-    }
+  case $operatingsystem {
+    default: { include gitosis::base }
+  }
 }

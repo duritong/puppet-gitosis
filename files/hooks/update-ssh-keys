@@ -1,0 +1,40 @@
+#!/usr/bin/env ruby
+
+# Script by Camillo Bruni, Oscar Nierstrasz, Niko Schwarz, 2010
+
+# This script checks whether any incoming commit 
+# has invalid ssh keys in the keydir directory. That is useful
+# for gitosis-admin repositories, as gitosis crashes hard
+# if faulty keys reside in the keydir.
+
+# Install it in .git/hooks/update, make sure it belongs to the git user
+# and is set to be executable.
+
+require "base64"
+ 
+def valid_public_ssh_key?(key)
+    match = /^(\S+) (\S+=+) (\S+)\n*/.match(key)
+    return false if match.nil?
+    type,key_string,comment = match[1..3]
+    data = Base64.decode64(key_string)
+    int_len = 4
+    str_len = data[0..int_len-1].unpack('N')[0]
+    return data[int_len..int_len+str_len-1] == type
+end
+
+def valid_key_file?(file)
+    line_number = 1
+    invalid_lines = []
+    `git show #{ARGV[2]}:#{file}`.each_line do |line|
+      invalid_lines.push(line_number) unless valid_public_ssh_key?(line) 
+      line_number+=1
+    end
+    return "" if invalid_lines.empty?
+    "\033[0;31m Invalid ssh keys on lines #{invalid_lines.inspect} in #{file}\033[0m\n"
+end
+
+files = `git diff #{ARGV[1]} #{ARGV[2]} --name-only --diff-filter=AM -z` 
+errors = files.split("\0").select{|file_name| file_name.match(/^keydir\//)} \
+  .map { |file_name| valid_key_file?(file_name)}.join("")
+puts errors
+exit errors.empty? ? 0 : -1
