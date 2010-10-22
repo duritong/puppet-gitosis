@@ -11,7 +11,7 @@ class gitosis::daemon::vhosts inherits gitosis::daemon {
                   "puppet:///modules/gitosis/sysconfig/git-daemon.vhosts" ],
     }
   } else {
-    File['/etc/xinetd.d/git']{
+    Xinetd::File['git']{
       source => [ "puppet:///modules/site-gitosis/xinetd.d/${fqdn}/git.vhosts",
                   "puppet:///modules/site-gitosis/xinetd.d/git.vhosts",
                   "puppet:///modules/gitosis/xinetd.d/git.vhosts" ],

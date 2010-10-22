@@ -6,7 +6,15 @@ class gitosis::daemon inherits git::daemon {
                   "puppet:///modules/gitosis/sysconfig/git-daemon" ],
       require +> User['gitosisd'],
     }
+  } else {
+    Xinetd::File['git']{
+      source => [ "puppet:///modules/site-gitosis/xinetd.d/${fqdn}/git",
+                  "puppet:///modules/site-gitosis/xinetd.d/git",
+                  "puppet:///modules/gitosis/xinetd.d/git" ],
+      require +> User['gitosisd'],
+    }
   }
+
   user::managed{'gitosisd':
     name_comment => "gitosis git-daemon user",
     managehome => false,
