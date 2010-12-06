@@ -24,7 +24,8 @@ define gitosis::repostorage(
   $initial_admin_pubkey = 'absent',
   $sitename = 'absent',
   $git_vhost = 'absent',
-  $gitweb = true
+  $gitweb = true,
+  $nagios_check_code = 'OK'
 ){
   if ($ensure == 'present') and ($initial_admin_pubkey == 'absent') {
     fail("You need to pass \$initial_admin_pubkey if repostorage ${name} should be present!")
@@ -223,6 +224,7 @@ define gitosis::repostorage(
         },
         default => $ensure
       },
+      check_code => $nagios_check_code,
     }
   }
 }
