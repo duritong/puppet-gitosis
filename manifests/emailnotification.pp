@@ -27,6 +27,9 @@ define gitosis::emailnotification(
 
   include gitosis::hooks
 
+  $escaped_mailinglist = regsubst($mailinglist,'\+','\\+')
+  $escaped_announcelist = regsubst($announcelist,'\+','\\+')
+
   if $gitrepo == 'absent' {
     $real_gitrepo = $name
   } else {
@@ -54,8 +57,8 @@ define gitosis::emailnotification(
   }
 
   if $ensure == 'present' {
-    exec{"git config --file ${repoconfig} hooks.mailinglist ${mailinglist}":
-      unless => "git config --file ${repoconfig} hooks.mailinglist | grep -qE '^${mailinglist}$'",
+    exec{"git config --file ${repoconfig} hooks.mailinglist ${escaped_mailinglist}":
+      unless => "git config --file ${repoconfig} hooks.mailinglist | grep -qE '^${escaped_mailinglist}$'",
     }
   } else {
     exec{"git config --file ${repoconfig} --unset hooks.mailinglist":
@@ -64,8 +67,8 @@ define gitosis::emailnotification(
   }
 
   if $announcelist == 'mailinglist' and $ensure == 'present' {
-    exec{"git config --file ${repoconfig} hooks.announcelist ${mailinglist}":
-      unless => "git config --file ${repoconfig} hooks.announcelist | grep -qE '^${mailinglist}$'",
+    exec{"git config --file ${repoconfig} hooks.announcelist ${escaped_mailinglist}":
+      unless => "git config --file ${repoconfig} hooks.announcelist | grep -qE '^${escaped_mailinglist}$'",
       onlyif => "test -e ${repoconfig}",
       require => Line["emailnotification_hook_for_${name}"],
     }
@@ -77,8 +80,8 @@ define gitosis::emailnotification(
       }
 
     } else {
-      exec{"git config --file ${repoconfig} hooks.announcelist ${announcelist}":
-        unless => "git config --file ${repoconfig} hooks.announcelist | grep -qE '^${announcelist}$'",
+      exec{"git config --file ${repoconfig} hooks.announcelist ${escaped_announcelist}":
+        unless => "git config --file ${repoconfig} hooks.announcelist | grep -qE '^${escaped_announcelist}$'",
         onlyif => "test -e ${repoconfig}",
         require => Line["emailnotification_hook_for_${name}"],
       }
