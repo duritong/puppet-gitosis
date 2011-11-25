@@ -37,12 +37,15 @@ define gitosis::repostorage(
     default => $basedir
   }
 
-  user::managed{"$name":
+  user::managed{$name:
     ensure => $ensure,
     homedir => $real_basedir,
     uid => $uid,
     gid => $gid,
-    password => $password,
+    password => $password ? {
+        'trocla' => trocla("gitosis_${trocla}",'sha512crypt'),
+        default => $password
+    },
     password_crypted => $password_crypted,
   }
 
