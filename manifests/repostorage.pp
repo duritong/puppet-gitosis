@@ -15,6 +15,7 @@ define gitosis::repostorage(
   $basedir = 'absent',
   $uid = 'absent',
   $gid = 'uid',
+  $group_name = 'absent',
   $logmode = 'default',
   $password = 'absent',
   $password_crypted = true,
@@ -38,6 +39,11 @@ define gitosis::repostorage(
     default => $basedir
   }
 
+  $real_group_name = $group_name ? {
+    'absent' => $name,
+    default => $group_name
+  }
+
   user::managed{$name:
     ensure => $ensure,
     homedir => $real_basedir,
@@ -52,7 +58,7 @@ define gitosis::repostorage(
   }
 
   include ::gitosis::gitaccess
-  augeas{"manage_${name}_in_group_gitaccess":
+  augeas{"manage_${real_group_name}_in_group_gitaccess":
     context => "/files/etc/group",
     require => [ Group['gitaccess'], User::Managed[$name] ],
   }
@@ -94,21 +100,21 @@ define gitosis::repostorage(
         mailinglist => 'root',
       }
     }
-    Augeas["manage_${name}_in_group_gitaccess"]{
+    Augeas["manage_${real_group_name}_in_group_gitaccess"]{
       changes => [ "ins user after gitaccess/user[last()]",
-                   "set gitaccess/user[last()]  ${name}" ],
-      onlyif => "match gitaccess/*[../user='${name}'] size == 0",
+                   "set gitaccess/user[last()]  ${real_group_name}" ],
+      onlyif => "match gitaccess/*[../user='${real_group_name}'] size == 0",
     }
   } else {
-    Augeas["manage_${name}_in_group_gitaccess"]{
-      changes => "rm user gitaccess/user[.='${name}']",
+    Augeas["manage_${real_group_name}_in_group_gitaccess"]{
+      changes => "rm user gitaccess/user[.='${real_group_name}']",
     }
   }
 
   case $gitosis_daemon {
     '': { $gitosis_daemon = true }
   }
-  augeas{"manage_gitosisd_in_group_${name}":
+  augeas{"manage_gitosisd_in_group_${real_group_name}":
     context => "/files/etc/group",
   }
   case $git_vhost {
@@ -124,11 +130,11 @@ define gitosis::repostorage(
     File[$git_vhost_link]{
       ensure => "${real_basedir}/repositories",
     }
-    Augeas["manage_gitosisd_in_group_${name}"]{
-      changes => [ "ins user after ${name}/user[last()]",
-                   "set ${name}/user[last()]  gitosisd" ],
-      onlyif => "match ${name}/*[../user='gitosisd'] size == 0",
-      require => [ User['gitosisd'], Group[$name] ],
+    Augeas["manage_gitosisd_in_group_${real_group_name}"]{
+      changes => [ "ins user after ${real_group_name}/user[last()]",
+                   "set ${real_group_name}/user[last()]  gitosisd" ],
+      onlyif => "match ${real_group_name}/*[../user='gitosisd'] size == 0",
+      require => [ User['gitosisd'], Group[$real_group_name] ],
       notify =>  Service['git-daemon'],
     }
   } else {
@@ -136,15 +142,15 @@ define gitosis::repostorage(
       ensure => absent,
       force => true,
     }
-    Augeas["manage_gitosisd_in_group_${name}"]{
-      changes => "rm user ${name}/user[.='gitosisd']",
+    Augeas["manage_gitosisd_in_group_${real_group_name}"]{
+      changes => "rm user ${ral_group_name}/user[.='gitosisd']",
     }
     if !$gitosis_daemon {
       include ::gitosis::daemon::disable
     }
   }
 
-  augeas{"manage_webuser_in_repos_group_${name}":
+  augeas{"manage_webuser_in_repos_group_${real_group_name}":
     context => "/files/etc/group",
   }
 
@@ -161,16 +167,16 @@ define gitosis::repostorage(
           default: { fail("no supported \$gitweb_webserver defined on ${fqdn}, so can't do git::web::repo: ${name}") }
         }
         if defined(Package[$webuser]){
-          Augeas["manage_webuser_in_repos_group_${name}"]{
-            require => [ Package[$webuser], Group[$name] ],
+          Augeas["manage_webuser_in_repos_group_${real_group_name}"]{
+            require => [ Package[$webuser], Group[$real_group_name] ],
           }
         } else {
-          Augeas["manage_webuser_in_repos_group_${name}"]{
-            require => Group[$name],
+          Augeas["manage_webuser_in_repos_group_${real_group_name}"]{
+            require => Group[$real_group_name],
           }
         }
         if defined(Service[$webuser]){
-          Augeas["manage_webuser_in_repos_group_${name}"]{
+          Augeas["manage_webuser_in_repos_group_${real_group_name}"]{
             notify => Service[$webuser],
           }
         }
@@ -180,10 +186,10 @@ define gitosis::repostorage(
           sitename => $sitename,
         }
         if $ensure == 'present' {
-          Augeas["manage_webuser_in_repos_group_${name}"]{
-            changes => [ "ins user after ${name}/user[last()]",
-                         "set ${name}/user[last()]  ${webuser}" ],
-            onlyif => "match ${name}/*[../user='${webuser}'] size == 0",
+          Augeas["manage_webuser_in_repos_group_${real_group_name}"]{
+            changes => [ "ins user after ${real_group_name}/user[last()]",
+                         "set ${real_group_name}/user[last()]  ${webuser}" ],
+            onlyif => "match ${real_group_name}/*[../user='${webuser}'] size == 0",
           }
         }
       }
@@ -194,8 +200,8 @@ define gitosis::repostorage(
     }
     # if present is absent we removed the user anyway
     if ($present != 'absent') {
-      Augeas["manage_webuser_in_repos_group_${name}"]{
-        changes => "rm ${name}/user[.='${webuser}']",
+      Augeas["manage_webuser_in_repos_group_${real_group_name}"]{
+        changes => "rm ${real_group_name}/user[.='${webuser}']",
       }
     }
   }
