@@ -26,6 +26,7 @@ define gitosis::repostorage(
   $sitename = 'absent',
   $git_vhost = 'absent',
   $manage_user_group = true,
+  $allowdupe_user = false,
   $gitweb = true,
   $nagios_check_code = 'OK'
 ){
@@ -47,6 +48,7 @@ define gitosis::repostorage(
   user::managed{$name:
     ensure => $ensure,
     homedir => $real_basedir,
+    allowdupe => $allowdupe_user,
     uid => $uid,
     gid => $gid,
     manage_group => $manage_user_group,
