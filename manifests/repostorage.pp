@@ -1,7 +1,7 @@
 # manifests/defines.pp
 
 # if you don't like to run a git-daemon for the gitosis daemon
-# please set the global variabl $gitosis_daemon to false.
+# please set the hiera variable gitosis_daemon to false.
 
 # admins: if set to an emailaddress we will add a email diff hook
 # admins_generatepatch: wether to include a patch
@@ -113,9 +113,6 @@ define gitosis::repostorage(
     }
   }
 
-  case $gitosis_daemon {
-    '': { $gitosis_daemon = true }
-  }
   augeas{"manage_gitosisd_in_group_${real_group_name}":
     context => "/files/etc/group",
   }
@@ -127,7 +124,7 @@ define gitosis::repostorage(
     }
   }
   file{$git_vhost_link: }
-  if $gitosis_daemon and $ensure == 'present' {
+  if hiera('gitosis_daemon',true) and ($ensure == 'present') {
     include ::gitosis::daemon
     File[$git_vhost_link]{
       ensure => "${real_basedir}/repositories",
@@ -147,7 +144,7 @@ define gitosis::repostorage(
     Augeas["manage_gitosisd_in_group_${real_group_name}"]{
       changes => "rm user ${ral_group_name}/user[.='gitosisd']",
     }
-    if !$gitosis_daemon {
+    if hiera('gitosis_daemon',true) == false {
       include ::gitosis::daemon::disable
     }
   }
@@ -220,7 +217,7 @@ define gitosis::repostorage(
     }
     nagios::service{"git_${name}":
       ensure => $ensure ? {
-        'present' => $gitosis_daemon ? {
+        'present' => hiera('gitosis_daemon',true) ? {
           false => 'absent',
           default => 'present'
         },
