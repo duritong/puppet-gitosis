@@ -113,7 +113,7 @@ define gitosis::repostorage(
     }
   }
 
-  augeas{"manage_gitosisd_in_group_${name}":
+  augeas{"manage_gitosisd_in_group_${real_group_name}":
     context => "/files/etc/group",
   }
   case $git_vhost {
