@@ -60,7 +60,7 @@ define gitosis::repostorage(
   }
 
   include ::gitosis::gitaccess
-  augeas{"manage_${real_group_name}_in_group_gitaccess":
+  augeas{"manage_${name}_in_group_gitaccess":
     context => "/files/etc/group",
     require => [ Group['gitaccess'], User::Managed[$name] ],
   }
@@ -102,18 +102,18 @@ define gitosis::repostorage(
         mailinglist => 'root',
       }
     }
-    Augeas["manage_${real_group_name}_in_group_gitaccess"]{
+    Augeas["manage_${name}_in_group_gitaccess"]{
       changes => [ "ins user after gitaccess/user[last()]",
-                   "set gitaccess/user[last()]  ${real_group_name}" ],
-      onlyif => "match gitaccess/*[../user='${real_group_name}'] size == 0",
+                   "set gitaccess/user[last()]  ${name}" ],
+      onlyif => "match gitaccess/*[../user='${name}'] size == 0",
     }
   } else {
-    Augeas["manage_${real_group_name}_in_group_gitaccess"]{
-      changes => "rm user gitaccess/user[.='${real_group_name}']",
+    Augeas["manage_${name}_in_group_gitaccess"]{
+      changes => "rm user gitaccess/user[.='${name}']",
     }
   }
 
-  augeas{"manage_gitosisd_in_group_${real_group_name}":
+  augeas{"manage_gitosisd_in_group_${name}":
     context => "/files/etc/group",
   }
   case $git_vhost {
@@ -142,7 +142,7 @@ define gitosis::repostorage(
       force => true,
     }
     Augeas["manage_gitosisd_in_group_${real_group_name}"]{
-      changes => "rm user ${ral_group_name}/user[.='gitosisd']",
+      changes => "rm user ${real_group_name}/user[.='gitosisd']",
     }
     if hiera('git_daemon',true) == false {
       include ::gitosis::daemon::disable
