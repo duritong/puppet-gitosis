@@ -24,7 +24,7 @@ define gitosis::repostorage(
   $initial_admin_pubkey = 'absent',
   $sitename = 'absent',
   $git_vhost = 'absent',
-  $manage_user_group => true,
+  $manage_user_group = true,
   $gitweb = true,
   $nagios_check_code = 'OK'
 ){
