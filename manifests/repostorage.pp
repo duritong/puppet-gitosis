@@ -68,7 +68,7 @@ define gitosis::repostorage(
     file{"${real_basedir}/initial_admin_pubkey.puppet":
       content => "${initial_admin_pubkey}\n",
       require => User[$name],
-      owner => $name, group => $name, mode => 0600;
+      owner => $name, group => $real_group_name, mode => 0600;
     }
     exec{"create_gitosis_${name}":
       command => "env -i gitosis-init < initial_admin_pubkey.puppet",
@@ -80,7 +80,7 @@ define gitosis::repostorage(
 
     file{"${real_basedir}/repositories/gitosis-admin.git/hooks/post-update":
       require => Exec["create_gitosis_${name}"],
-      owner => $name, group => $name, mode => 0755;
+      owner => $name, group => $real_group_name, mode => 0755;
     }
 
     ::gitosis::emailnotification{"gitosis-admin_${name}":
