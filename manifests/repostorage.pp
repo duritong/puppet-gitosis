@@ -24,6 +24,7 @@ define gitosis::repostorage(
   $initial_admin_pubkey = 'absent',
   $sitename = 'absent',
   $git_vhost = 'absent',
+  $manage_user_group => true,
   $gitweb = true,
   $nagios_check_code = 'OK'
 ){
@@ -42,6 +43,7 @@ define gitosis::repostorage(
     homedir => $real_basedir,
     uid => $uid,
     gid => $gid,
+    manage_group => $manage_user_group,
     password => $password ? {
         'trocla' => trocla("gitosis_${trocla}",'sha512crypt'),
         default => $password
