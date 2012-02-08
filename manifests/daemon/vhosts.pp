@@ -1,9 +1,7 @@
 class gitosis::daemon::vhosts inherits gitosis::daemon {
   file{'/srv/git':
-    ensure => directory,
     require => User['gitosisd'],
-    owner => root, group => gitosisd, mode => 0750;
-  }  
+  }
   if hiera('git_daemon',true) == 'service' {
     File['/etc/sysconfig/git-daemon']{
       source => [ "puppet:///modules/site-gitosis/sysconfig/${fqdn}/git-daemon.vhosts",
@@ -16,6 +14,19 @@ class gitosis::daemon::vhosts inherits gitosis::daemon {
                   "puppet:///modules/site-gitosis/xinetd.d/git.vhosts",
                   "puppet:///modules/gitosis/xinetd.d/git.vhosts" ],
       require +> User['gitosisd'],
+    }
+  }
+  if hiera('git_daemon',true) == false {
+    File['/srv/git']{
+      ensure => absent,
+      purge => true,
+      force => true,
+      recurse => true,
+    }
+  } else {
+    File['/srv/git']{
+      ensure => directory,
+      owner => root, group => gitosisd, mode => 0750;
     }
   }
 }

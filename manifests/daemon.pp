@@ -24,5 +24,5 @@ class gitosis::daemon inherits git::daemon {
       ubuntu => '/usr/sbin/nologin',
       default => '/sbin/nologin'
     },
-   }
+  }
 }
