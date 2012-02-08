@@ -26,7 +26,9 @@ class gitosis::daemon::vhosts inherits gitosis::daemon {
   } else {
     File['/srv/git']{
       ensure => directory,
-      owner => root, group => gitosisd, mode => 0750;
+      owner => root,
+      group => gitosisd,
+      mode => 0750
     }
   }
 }
