@@ -159,11 +159,12 @@ define gitosis::repostorage(
 
   if $gitweb and $ensure == 'present' {
     case $git_vhost {
-      'absent': { fail("can't do gitweb if \$git_vhost isn't set for ${name} on ${fqdn}") }
+      'absent': { fail("can't do gitweb if \$git_vhost isn't set for ${name} on ${::fqdn}") }
       default: {
+        $gitweb_webserver = hiera('gitweb_webserver','none')
         case $gitweb_webserver {
           'lighttpd','apache': { $webuser = $gitweb_webserver }
-          default: { fail("no supported \$gitweb_webserver defined on ${fqdn}, so can't do git::web::repo: ${name}") }
+          default: { fail("no supported \$gitweb_webserver defined on ${::fqdn}, so can't do git::web::repo: ${name}") }
         }
         if defined(Package[$webuser]){
           Augeas["manage_webuser_in_repos_group_${real_group_name}"]{
@@ -205,9 +206,9 @@ define gitosis::repostorage(
     }
   }
 
-  if $use_nagios {
+  if hiera('use_nagios',false) {
     $check_hostname = $git_vhost ? {
-      'absent' => $fqdn,
+      'absent' => $::fqdn,
       default => $git_vhost
     }
     sshd::nagios{"gitrepo_${name}":
