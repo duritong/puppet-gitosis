@@ -49,10 +49,10 @@ define gitosis::emailnotification(
     },
     owner => root, group => 0, mode => 0755;
   }
-  line{"emailnotification_hook_for_${name}":
+  file_line{"emailnotification_hook_for_${name}":
     ensure => $ensure,
     line => '. /opt/git-hooks/post-receive-email',
-    file => "${repodir}/hooks/post-receive",
+    path => "${repodir}/hooks/post-receive",
     require => [ File['/opt/git-hooks'], File["${repodir}/hooks/post-receive"] ],
   }
 
