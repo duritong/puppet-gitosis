@@ -157,14 +157,13 @@ define gitosis::repostorage(
     logmode => $logmode,
   }
 
+  $webuser = hiera('gitweb_webserver','none')
   if $gitweb and $ensure == 'present' {
     case $git_vhost {
       'absent': { fail("can't do gitweb if \$git_vhost isn't set for ${name} on ${::fqdn}") }
       default: {
-        $gitweb_webserver = hiera('gitweb_webserver','none')
-        case $gitweb_webserver {
-          'lighttpd','apache': { $webuser = $gitweb_webserver }
-          default: { fail("no supported \$gitweb_webserver defined on ${::fqdn}, so can't do git::web::repo: ${name}") }
+        if $webuser == 'none' {
+          fail "You need to set gitweb_webserver for ${::fqdn} if you want to use gitwebs"
         }
         if defined(Package[$webuser]){
           Augeas["manage_webuser_in_repos_group_${real_group_name}"]{
@@ -199,7 +198,7 @@ define gitosis::repostorage(
       ensure => 'absent',
     }
     # if present is absent we removed the user anyway
-    if ($present != 'absent') {
+    if ($present != 'absent') and ($webuser != 'none') {
       Augeas["manage_webuser_in_repos_group_${real_group_name}"]{
         changes => "rm ${real_group_name}/user[.='${webuser}']",
       }
