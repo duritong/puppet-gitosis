@@ -198,7 +198,7 @@ define gitosis::repostorage(
       ensure => 'absent',
     }
     # if present is absent we removed the user anyway
-    if ($present != 'absent') and ($webuser != 'none') {
+    if ($present != 'absent') {
       Augeas["manage_webuser_in_repos_group_${real_group_name}"]{
         changes => "rm ${real_group_name}/user[.='${webuser}']",
       }
