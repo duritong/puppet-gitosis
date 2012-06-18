@@ -149,17 +149,16 @@ define gitosis::repostorage(
     }
   }
 
-  augeas{"manage_webuser_in_repos_group_${real_group_name}":
-    context => "/files/etc/group",
-  }
-
   $webuser = hiera('gitweb_webserver','none')
   if $webuser != 'none' {
-    git::web::repo{$git_vhost:
-      logmode => $logmode,
+    augeas{"manage_webuser_in_repos_group_${real_group_name}":
+      context => "/files/etc/group",
     }
   }
 
+  git::web::repo{$git_vhost:
+    logmode => $logmode,
+  }
   if $gitweb and $ensure == 'present' {
     case $git_vhost {
       'absent': { fail("can't do gitweb if \$git_vhost isn't set for ${name} on ${::fqdn}") }
