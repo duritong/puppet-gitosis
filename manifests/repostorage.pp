@@ -1,8 +1,5 @@
-# manifests/defines.pp
-
 # if you don't like to run a git-daemon for the gitosis daemon
 # please set the hiera variable git_daemon to false.
-
 # admins: if set to an emailaddress we will add a email diff hook
 # admins_generatepatch: wether to include a patch
 # admins_sender: which sender to use
@@ -113,8 +110,10 @@ define gitosis::repostorage(
     }
   }
 
-  augeas{"manage_gitosisd_in_group_${real_group_name}":
-    context => "/files/etc/group",
+  if hiera('git_daemon',true) {
+    augeas{"manage_gitosisd_in_group_${real_group_name}":
+      context => "/files/etc/group",
+    }
   }
   case $git_vhost {
     'absent': { $git_vhost_link = '/srv/git' }
@@ -141,8 +140,10 @@ define gitosis::repostorage(
       ensure => absent,
       force => true,
     }
-    Augeas["manage_gitosisd_in_group_${real_group_name}"]{
-      changes => "rm user ${real_group_name}/user[.='gitosisd']",
+    if hiera('git_daemon',true) {
+      Augeas["manage_gitosisd_in_group_${real_group_name}"]{
+        changes => "rm user ${real_group_name}/user[.='gitosisd']",
+      }
     }
     if hiera('git_daemon',true) == false {
       include ::gitosis::daemon::disable
