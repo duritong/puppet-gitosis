@@ -8,24 +8,24 @@
 #   - default: Do normal logging including ips
 #   - anonym: Don't log ips
 define gitosis::repostorage(
-  $ensure = 'present',
-  $basedir = 'absent',
-  $uid = 'absent',
-  $gid = 'uid',
-  $group_name = 'absent',
-  $logmode = 'default',
-  $password = 'absent',
-  $password_crypted = true,
-  $admins = 'absent',
+  $ensure               = 'present',
+  $basedir              = 'absent',
+  $uid                  = 'absent',
+  $gid                  = 'uid',
+  $group_name           = 'absent',
+  $logmode              = 'default',
+  $password             = 'absent',
+  $password_crypted     = true,
+  $admins               = 'absent',
   $admins_generatepatch = true,
-  $admins_sender = false,
+  $admins_sender        = false,
   $initial_admin_pubkey = 'absent',
-  $sitename = 'absent',
-  $git_vhost = 'absent',
-  $manage_user_group = true,
-  $allowdupe_user = false,
-  $gitweb = true,
-  $nagios_check_code = 'OK'
+  $sitename             = 'absent',
+  $git_vhost            = 'absent',
+  $manage_user_group    = true,
+  $allowdupe_user       = false,
+  $gitweb               = true,
+  $nagios_check_code    = 'OK'
 ){
   if ($ensure == 'present') and ($initial_admin_pubkey == 'absent') {
     fail("You need to pass \$initial_admin_pubkey if repostorage ${name} should be present!")
@@ -33,61 +33,65 @@ define gitosis::repostorage(
   include ::gitosis
 
   $real_basedir = $basedir ? {
-    'absent' => "/home/${name}",
-    default => $basedir
+    'absent'  => "/home/${name}",
+    default   => $basedir
   }
 
   $real_group_name = $group_name ? {
-    'absent' => $name,
-    default => $group_name
+    'absent'  => $name,
+    default   => $group_name
   }
 
   user::managed{$name:
-    ensure => $ensure,
-    homedir => $real_basedir,
-    allowdupe => $allowdupe_user,
-    uid => $uid,
-    gid => $gid,
-    manage_group => $manage_user_group,
-    password => $password ? {
-        'trocla' => trocla("gitosis_${trocla}",'sha512crypt'),
-        default => $password
+    ensure            => $ensure,
+    homedir           => $real_basedir,
+    allowdupe         => $allowdupe_user,
+    uid               => $uid,
+    gid               => $gid,
+    manage_group      => $manage_user_group,
+    password          => $password ? {
+        'trocla'  => trocla("gitosis_${trocla}",'sha512crypt'),
+        default   => $password
     },
-    password_crypted => $password_crypted,
+    password_crypted  => $password_crypted,
   }
 
   include ::gitosis::gitaccess
   augeas{"manage_${name}_in_group_gitaccess":
-    context => "/files/etc/group",
+    context => '/files/etc/group',
     require => [ Group['gitaccess'], User::Managed[$name] ],
   }
   if $ensure == 'present' {
     file{"${real_basedir}/initial_admin_pubkey.puppet":
       content => "${initial_admin_pubkey}\n",
       require => User[$name],
-      owner => $name, group => $real_group_name, mode => 0600;
+      owner   => $name,
+      group   => $real_group_name,
+      mode    => '0600';
     }
     exec{"create_gitosis_${name}":
-      command => "env -i gitosis-init < initial_admin_pubkey.puppet",
-      unless => "test -d ${real_basedir}/repositories",
-      cwd => "${real_basedir}",
-      user => $name,
+      command => 'env -i gitosis-init < initial_admin_pubkey.puppet',
+      unless  => "test -d ${real_basedir}/repositories",
+      cwd     => $real_basedir,
+      user    => $name,
       require => [ Package['gitosis'], File["${real_basedir}/initial_admin_pubkey.puppet"] ],
     }
 
     file{"${real_basedir}/repositories/gitosis-admin.git/hooks/post-update":
       require => Exec["create_gitosis_${name}"],
-      owner => $name, group => $real_group_name, mode => 0755;
+      owner   => $name,
+      group   => $real_group_name,
+      mode    => '0755';
     }
 
     ::gitosis::emailnotification{"gitosis-admin_${name}":
-      gitrepo => "gitosis-admin",
-      gitosis_repo => $name,
-      basedir => $real_basedir,
-      envelopesender => $admins_sender,
-      generatepatch => $admins_generatepatch,
-      emailprefix => "${name}: gitosis-admin",
-      require => File["${real_basedir}/repositories/gitosis-admin.git/hooks/post-update"],
+      gitrepo         => 'gitosis-admin',
+      gitosis_repo    => $name,
+      basedir         => $real_basedir,
+      envelopesender  => $admins_sender,
+      generatepatch   => $admins_generatepatch,
+      emailprefix     => "${name}: gitosis-admin",
+      require         => File["${real_basedir}/repositories/gitosis-admin.git/hooks/post-update"],
     }
     if $admins != 'absent'  {
       Gitosis::Emailnotification["gitosis-admin_${name}"]{
@@ -95,14 +99,14 @@ define gitosis::repostorage(
         }
     } else {
       Gitosis::Emailnotification["gitosis-admin_${name}"]{
-        ensure => absent,
+        ensure      => absent,
         mailinglist => 'root',
       }
     }
     Augeas["manage_${name}_in_group_gitaccess"]{
-      changes => [  "ins user after gitaccess/user[last()]",
+      changes => [  'ins user after gitaccess/user[last()]',
                     "set gitaccess/user[last()]  ${name}" ],
-      onlyif => "match gitaccess/*[../user='${name}'] size == 0",
+      onlyif  => "match gitaccess/*[../user='${name}'] size == 0",
     }
   } else {
     Augeas["manage_${name}_in_group_gitaccess"]{
@@ -111,7 +115,7 @@ define gitosis::repostorage(
   }
 
   augeas{"manage_gitosisd_in_group_${real_group_name}":
-    context => "/files/etc/group",
+    context => '/files/etc/group',
   }
   if hiera('git_daemon',true) and ($ensure == 'present') {
     include ::gitosis::daemon
@@ -125,7 +129,7 @@ define gitosis::repostorage(
     Augeas["manage_gitosisd_in_group_${real_group_name}"]{
       changes => [  "ins user after ${real_group_name}/user[last()]",
                     "set ${real_group_name}/user[last()]  gitosisd" ],
-      onlyif => "match ${real_group_name}/*[../user='gitosisd'] size == 0",
+      onlyif  => "match ${real_group_name}/*[../user='gitosisd'] size == 0",
       require => [ User['gitosisd'], Group[$real_group_name] ],
     }
   } else {
@@ -137,7 +141,7 @@ define gitosis::repostorage(
   $webuser = hiera('gitweb_webserver','none')
   if $webuser != 'none' {
     augeas{"manage_webuser_in_repos_group_${real_group_name}":
-      context => "/files/etc/group",
+      context => '/files/etc/group',
     }
   }
 
@@ -166,15 +170,15 @@ define gitosis::repostorage(
           }
         }
         Git::Web::Repo[$git_vhost]{
-          projectroot => "${real_basedir}/repositories",
+          projectroot   => "${real_basedir}/repositories",
           projects_list => "${real_basedir}/gitosis/projects.list",
-          sitename => $sitename,
+          sitename      => $sitename,
         }
         if $ensure == 'present' {
           Augeas["manage_webuser_in_repos_group_${real_group_name}"]{
             changes => [  "ins user after ${real_group_name}/user[last()]",
                           "set ${real_group_name}/user[last()]  ${webuser}" ],
-            onlyif => "match ${real_group_name}/*[../user='${webuser}'] size == 0",
+            onlyif  => "match ${real_group_name}/*[../user='${webuser}'] size == 0",
           }
         }
       }
@@ -193,34 +197,34 @@ define gitosis::repostorage(
 
   if hiera('use_nagios',false) {
     $check_hostname = $git_vhost ? {
-      'absent' => $::fqdn,
-      default => $git_vhost
+      'absent'  => $::fqdn,
+      default   => $git_vhost
     }
     sshd::nagios{"gitrepo_${name}":
-      ensure => $ensure,
-      port => 22,
-      check_hostname => $check_hostname,
+      ensure          => $ensure,
+      port            => 22,
+      check_hostname  => $check_hostname,
     }
     nagios::service{"git_${name}":
-      ensure => $ensure ? {
+      ensure        => $ensure ? {
         'present' => hiera('git_daemon',true) ? {
-          false => 'absent',
+          false   => 'absent',
           default => 'present'
         },
-        default => $ensure
+        default   => $ensure
       },
       check_command => "check_git!${check_hostname}",
     }
     nagios::service::http{"gitweb_${name}":
-      check_domain => $git_vhost,
-      ensure => $ensure ? {
+      ensure        => $ensure ? {
         'present' => $gitweb ? {
-          false => 'absent',
+          false   => 'absent',
           default => 'present'
         },
-        default => $ensure
+        default   => $ensure
       },
-      check_code => $nagios_check_code,
+      check_domain  => $git_vhost,
+      check_code    => $nagios_check_code,
     }
   }
 }
