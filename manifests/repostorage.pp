@@ -126,10 +126,8 @@ define gitosis::repostorage(
       require => [ User['gitosisd'], Group[$real_group_name] ],
     }
   } else {
-    if hiera('git_daemon',true) {
-      Augeas["manage_gitosisd_in_group_${real_group_name}"]{
-        changes => "rm user ${real_group_name}/user[.='gitosisd']",
-      }
+    Augeas["manage_gitosisd_in_group_${real_group_name}"]{
+      changes => "rm user ${real_group_name}/user[.='gitosisd']",
     }
   }
 
