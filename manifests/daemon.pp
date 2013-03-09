@@ -1,7 +1,7 @@
 # daemon stuff for gitosis
 class gitosis::daemon {
   class{'git::daemon::extra':
-    use_shoreall => hiera('use_shorewall',false),
+    use_shorewall => hiera('use_shorewall',false),
   }
   if hiera('git_daemon',true) == 'service' {
     Class['git::daemon::extra']{
