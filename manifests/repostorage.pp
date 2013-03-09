@@ -124,7 +124,6 @@ define gitosis::repostorage(
                     "set ${real_group_name}/user[last()]  gitosisd" ],
       onlyif => "match ${real_group_name}/*[../user='gitosisd'] size == 0",
       require => [ User['gitosisd'], Group[$real_group_name] ],
-      notify =>  Service['git-daemon'],
     }
   } else {
     if hiera('git_daemon',true) {
