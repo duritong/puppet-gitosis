@@ -1,19 +1,22 @@
 # daemon stuff for gitosis
-class gitosis::daemon inherits git::daemon::extra {
+class gitosis::daemon {
+  class{'git::daemon::extra':
+    use_shoreall => hiera('use_shorewall',false),
+  }
   if hiera('git_daemon',true) == 'service' {
-    File['/etc/sysconfig/git-daemon']{
+    Class['git::daemon::extra']{
       source => [ "puppet:///modules/site_gitosis/sysconfig/${::fqdn}/git-daemon",
                   'puppet:///modules/site_gitosis/sysconfig/git-daemon',
                   'puppet:///modules/gitosis/sysconfig/git-daemon' ],
-      require +> User['gitosisd'],
     }
+    User['gitosisd'] -> File['/etc/sysconfig/git-daemon']
   } elsif hiera('git_daemon',true) != false {
-    Xinetd::File['git']{
+    Class['git::daemon::extra']{
       source => [ "puppet:///modules/site_gitosis/xinetd.d/${::fqdn}/git",
                   'puppet:///modules/site_gitosis/xinetd.d/git',
                   'puppet:///modules/gitosis/xinetd.d/git' ],
-      require +> User['gitosisd'],
     }
+    User['gitosisd'] -> Xinetd::File['git']
   }
 
   $shell = $::operatingsystem ? {
