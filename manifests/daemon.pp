@@ -1,4 +1,4 @@
-class gitosis::daemon inherits git::daemon {
+class gitosis::daemon inherits git::daemon::extra {
   if hiera('git_daemon',true) == 'service' {
     File['/etc/sysconfig/git-daemon']{
       source => [ "puppet:///modules/site_gitosis/sysconfig/${::fqdn}/git-daemon",
