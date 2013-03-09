@@ -3,10 +3,6 @@ class gitosis::daemon {
   class{'git::daemon':
     use_shorewall => hiera('use_shorewall',false),
   }
-
-  class{'git::daemon':
-    use_shorewall => $use_shorewall,
-  }
   include xinetd
 
   file{'/srv/git':
