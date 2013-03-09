@@ -115,7 +115,10 @@ define gitosis::repostorage(
   }
   if hiera('git_daemon',true) and ($ensure == 'present') {
     include ::gitosis::daemon
-    file{"/srv/git/${name}":
+    if $git_vhost == 'absent' {
+      fail("Must set \$git_vhost for ${name} if you want to use git_daemon")
+    }
+    file{"/srv/git/${git_vhost}":
       ensure => link,
       target => "${real_basedir}/repositories",
     }
