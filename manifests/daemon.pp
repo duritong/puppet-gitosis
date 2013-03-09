@@ -1,22 +1,37 @@
 # daemon stuff for gitosis
 class gitosis::daemon {
-  class{'git::daemon::extra':
+  class{'git::daemon':
     use_shorewall => hiera('use_shorewall',false),
   }
-  if hiera('git_daemon',true) == 'service' {
-    Class['git::daemon::extra']{
-      source => [ "puppet:///modules/site_gitosis/sysconfig/${::fqdn}/git-daemon",
-                  'puppet:///modules/site_gitosis/sysconfig/git-daemon',
-                  'puppet:///modules/gitosis/sysconfig/git-daemon' ],
-    }
-    User['gitosisd'] -> File['/etc/sysconfig/git-daemon']
-  } elsif hiera('git_daemon',true) != false {
-    Class['git::daemon::extra']{
-      source => [ "puppet:///modules/site_gitosis/xinetd.d/${::fqdn}/git",
-                  'puppet:///modules/site_gitosis/xinetd.d/git',
-                  'puppet:///modules/gitosis/xinetd.d/git' ],
-    }
-    User['gitosisd'] -> Xinetd::File['git']
+
+  class{'git::daemon':
+    use_shorewall => $use_shorewall,
+  }
+  include xinetd
+
+  file{'/srv/git':
+    ensure        => directory,
+    seltype       => 'git_system_content_t',
+    owner         => root,
+    group         => 0,
+    mode          => '0644',
+    recurse       => true,
+    purge         => true,
+    force         => true,
+    recurselimit  => 1,
+    require       => Package['git-daemon'],
+  }
+  augeas{'enable_git_daemon':
+    context => '/files/etc/xinetd.d/git/service',
+    changes => [
+      'set disable no',
+      'set user gitosisd',
+      'rm server_args/value',
+      'set server_args/value[1] --interpolated-path=/srv/git/%H/%D',
+      'set server_args/value[2] --syslog',
+      'set server_args/value[3] --inetd',
+    ],
+    notify  => Service['xinetd'],
   }
 
   $shell = $::operatingsystem ? {
