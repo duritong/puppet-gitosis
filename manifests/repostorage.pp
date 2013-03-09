@@ -113,11 +113,11 @@ define gitosis::repostorage(
   augeas{"manage_gitosisd_in_group_${real_group_name}":
     context => "/files/etc/group",
   }
-  file{$git_vhost_link: }
   if hiera('git_daemon',true) and ($ensure == 'present') {
     include ::gitosis::daemon
-    File[$git_vhost_link]{
-      ensure => "${real_basedir}/repositories",
+    file{"/srv/git/${name}":
+      ensure => link,
+      target => "${real_basedir}/repositories",
     }
     Augeas["manage_gitosisd_in_group_${real_group_name}"]{
       changes => [  "ins user after ${real_group_name}/user[last()]",
