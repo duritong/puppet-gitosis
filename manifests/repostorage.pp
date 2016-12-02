@@ -25,7 +25,8 @@ define gitosis::repostorage(
   $manage_user_group    = true,
   $allowdupe_user       = false,
   $gitweb               = true,
-  $nagios_check_code    = 'OK'
+  $nagios_check_code    = 'OK',
+  $use_nagios           = hiera('use_nagios',false), # backward compatible
 ){
   if ($ensure == 'present') and ($initial_admin_pubkey == 'absent') {
     fail("You need to pass \$initial_admin_pubkey if repostorage ${name} should be present!")
@@ -195,7 +196,7 @@ define gitosis::repostorage(
     }
   }
 
-  if hiera('use_nagios',false) {
+  if $use_nagios {
     $check_hostname = $git_vhost ? {
       'absent'  => $::fqdn,
       default   => $git_vhost
