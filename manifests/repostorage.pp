@@ -43,18 +43,19 @@ define gitosis::repostorage(
     default   => $group_name
   }
 
+  $real_password = $password ? {
+    'trocla'  => trocla("gitosis_${name}",'sha512crypt'),
+    default   => $password
+  }
   user::managed{$name:
-    ensure            => $ensure,
-    homedir           => $real_basedir,
-    allowdupe         => $allowdupe_user,
-    uid               => $uid,
-    gid               => $gid,
-    manage_group      => $manage_user_group,
-    password          => $password ? {
-        'trocla'  => trocla("gitosis_${trocla}",'sha512crypt'),
-        default   => $password
-    },
-    password_crypted  => $password_crypted,
+    ensure           => $ensure,
+    homedir          => $real_basedir,
+    allowdupe        => $allowdupe_user,
+    uid              => $uid,
+    gid              => $gid,
+    manage_group     => $manage_user_group,
+    password         => $real_password,
+    password_crypted => $password_crypted,
   }
 
   include ::gitosis::gitaccess
@@ -86,18 +87,18 @@ define gitosis::repostorage(
     }
 
     ::gitosis::emailnotification{"gitosis-admin_${name}":
-      gitrepo         => 'gitosis-admin',
-      gitosis_repo    => $name,
-      basedir         => $real_basedir,
-      envelopesender  => $admins_sender,
-      generatepatch   => $admins_generatepatch,
-      emailprefix     => "${name}: gitosis-admin",
-      require         => File["${real_basedir}/repositories/gitosis-admin.git/hooks/post-update"],
+      gitrepo        => 'gitosis-admin',
+      gitosis_repo   => $name,
+      basedir        => $real_basedir,
+      envelopesender => $admins_sender,
+      generatepatch  => $admins_generatepatch,
+      emailprefix    => "${name}: gitosis-admin",
+      require        => File["${real_basedir}/repositories/gitosis-admin.git/hooks/post-update"],
     }
     if $admins != 'absent'  {
       Gitosis::Emailnotification["gitosis-admin_${name}"]{
-            mailinglist => $admins,
-        }
+        mailinglist => $admins,
+      }
     } else {
       Gitosis::Emailnotification["gitosis-admin_${name}"]{
         ensure      => absent,
@@ -188,8 +189,8 @@ define gitosis::repostorage(
     Git::Web::Repo[$git_vhost]{
       ensure => 'absent',
     }
-    # if present is absent we removed the user anyway
-    if ($present != 'absent') and ($webuser != 'none'){
+    # if ensure is absent we removed the user anyway
+    if ($ensure != 'absent') and ($webuser != 'none'){
       Augeas["manage_webuser_in_repos_group_${real_group_name}"]{
         changes => "rm ${real_group_name}/user[.='${webuser}']",
       }
@@ -202,30 +203,32 @@ define gitosis::repostorage(
       default   => $git_vhost
     }
     sshd::nagios{"gitrepo_${name}":
-      ensure          => $ensure,
-      port            => 22,
-      check_hostname  => $check_hostname,
+      ensure         => $ensure,
+      port           => 22,
+      check_hostname => $check_hostname,
+    }
+    $service_ensure = $ensure ? {
+      'present' => hiera('git_daemon',true) ? {
+        false   => 'absent',
+        default => 'present'
+      },
+      default   => $ensure
     }
     nagios::service{"git_${name}":
-      ensure        => $ensure ? {
-        'present' => hiera('git_daemon',true) ? {
-          false   => 'absent',
-          default => 'present'
-        },
-        default   => $ensure
-      },
+      ensure        => $service_ensure,
       check_command => "check_git!${check_hostname}",
     }
-    nagios::service::http{"gitweb_${name}":
-      ensure        => $ensure ? {
-        'present' => $gitweb ? {
-          false   => 'absent',
-          default => 'present'
-        },
-        default   => $ensure
+    $http_ensure = $ensure ? {
+      'present' => $gitweb ? {
+        false   => 'absent',
+        default => 'present'
       },
-      check_domain  => $git_vhost,
-      check_code    => $nagios_check_code,
+      default   => $ensure
+    }
+    nagios::service::http{"gitweb_${name}":
+      ensure       => $http_ensure,
+      check_domain => $git_vhost,
+      check_code   => $nagios_check_code,
     }
   }
 }
